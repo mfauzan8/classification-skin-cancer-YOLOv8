@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Klasifikasi Kanker Kulit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Klasifikasi Jenis Kanker Kulit - YOLO v8</h1>
+      <h2><span class="red">Ganas</span> Atau <span class="green">Jinak</span></h2>
+      <form method="POST" action="/" enctype="multipart/form-data">
+        <div class="wrap">
+          <input type="file" name="image" accept="image/*" required />
+        </div>
+        <div class="ket">Silahkan pilih file gambar untuk mengetahui jenis dari kanker kulitnya.</div>
+        <input type="submit" value="Upload" class="btn-primary" />
+      </form>
+    </div>
+  </body>
+</html>
