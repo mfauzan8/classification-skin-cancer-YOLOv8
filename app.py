@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import torchvision.transforms as transforms
+from torchvision.transforms.functional import resize
 from PIL import Image
 import cv2
 import os
@@ -12,7 +13,11 @@ model = YOLO('best.pt')
 
 # Function to preprocess image
 def preprocess_image(image):
+    # Open and resize image
     image = Image.open(image)
+    image = resize(image, (640, 640))
+    
+    # Convert image to tensor and add batch dimension
     image = transforms.ToTensor()(image)
     image = image.unsqueeze(0)
     return image
@@ -32,9 +37,10 @@ def classify_image(image):
         clasify = classes[result.probs.top1]
         array1 = result.probs.top5
         array2 = result.probs.top5conf
-        class_array1 = ["jinak" if val == 1 else "ganas" for val in array1]
-        combined = [(class_array1[i], array2[i]) for i in range(len(array2))]
+        class_array = [classes[val] for val in array1]
+        combined = [(class_array[i], array2[i]) for i in range(len(array2))]
         combined_clear = [(label, round(score.item(), 3)) for label, score in combined]
+
 
 
     return clasify, highest_prob, combined_clear
@@ -55,8 +61,15 @@ def home():
 
         # Write prediction on the image
         img = cv2.imread(os.path.join(temp_dir, filename))
-        cv2.putText(img, f"{combined_clear[0]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,0), 2)
-        cv2.putText(img, f"{combined_clear[1]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,0), 2)
+        cv2.putText(img, f"{combined_clear[0]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+        cv2.putText(img, f"{combined_clear[1]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+        if len(combined_clear) >= 3:
+            cv2.putText(img, f"{combined_clear[2]}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+        if len(combined_clear) >= 4:
+            cv2.putText(img, f"{combined_clear[3]}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+        if len(combined_clear) >= 5:
+            cv2.putText(img, f"{combined_clear[4]}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+
         cv2.imwrite(os.path.join(temp_dir, 'result.jpg'), img)
 
         # Delete temporary file
