@@ -1,4 +1,3 @@
 ultralytics
 flask
 Pillow
-flask_bootstrap

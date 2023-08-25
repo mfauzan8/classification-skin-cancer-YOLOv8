@@ -8,29 +8,26 @@ from ultralytics import YOLO
 
 app = Flask(__name__)
 
-# Load model
+# import model
 model = YOLO('best.pt')
 
-# Function to preprocess image
+# Memproses gambar
 def preprocess_image(image):
-    # Open and resize image
     image = Image.open(image)
     image = resize(image, (640, 640))
     
-    # Convert image to tensor and add batch dimension
+    #Mengubah to Tensor
     image = transforms.ToTensor()(image)
     image = image.unsqueeze(0)
     return image
 
-# Function to perform image classification
+
 def classify_image(image):
-    # Preprocess image
+
     image_tensor = preprocess_image(image)
 
-    # Perform inference
     results = model(image_tensor)
 
-    # Get class labels and probabilities
     for result in results:
         classes = result.names
         highest_prob = max(result.probs.top5conf)
@@ -46,33 +43,28 @@ def classify_image(image):
     return clasify, highest_prob, combined_clear
 
 @app.route('/', methods=['GET', 'POST'])
+
 def home():
     if request.method == 'POST':
-        # Get uploaded image
+        # mendapatkan gambar dari upload image
         image = request.files['image']
 
-        # Save temporary image
+        # Save gambar ke tmp
         temp_dir = os.path.join(app.root_path, 'static', 'temp')
         filename = image.filename
         image.save(os.path.join(temp_dir, filename))
 
-        # Perform image classification
         clasify, highest_prob, combined_clear  = classify_image(image)
 
-        # Write prediction on the image
+        # menuliskan hasil klasifikasi ke gambar
         img = cv2.imread(os.path.join(temp_dir, filename))
-        cv2.putText(img, f"{combined_clear[0]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
-        cv2.putText(img, f"{combined_clear[1]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
-        if len(combined_clear) >= 3:
-            cv2.putText(img, f"{combined_clear[2]}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
-        if len(combined_clear) >= 4:
-            cv2.putText(img, f"{combined_clear[3]}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
-        if len(combined_clear) >= 5:
-            cv2.putText(img, f"{combined_clear[4]}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
+        for idx, text in enumerate(combined_clear[:5]):
+            y_offset = 30 * (idx + 1)
+            cv2.putText(img, f"{text}", (10, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,205), 2)
 
         cv2.imwrite(os.path.join(temp_dir, 'result.jpg'), img)
 
-        # Delete temporary file
+        # Delete gambar tmp
         os.remove(os.path.join(temp_dir, filename))
 
         return render_template('result.html', clasify=clasify , highest_prob=highest_prob )
